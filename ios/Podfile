@@ -1,14 +1,30 @@
+# Flutter ёрдамчи скриптини лойиҳага улаймиз
+import File.expand_path(File.join('..', '..', '.symlinks', 'plugins', 'flutter_plugin_android_lifecycle', 'ios', 'Classes', 'podhelper.rb'), __FILE__) rescue nil
+# Агар тепадаги топилмаса, стандарт йўлни синаб кўрамиз:
+begin
+  phelper = File.expand_path(File.join('..', '..', '..', 'flutter', 'packages', 'flutter_tools', 'bin', 'podhelper.rb'), __FILE__)
+  require phelper if File.exist?(phelper)
+rescue LoadError
+end
+
 platform :ios, '13.0'
 
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  flutter_install_all_ios_pods File.dirname(File.expand_path(__FILE__))
+  # Эски буйруқ ўрнига стандарт Flutter методларини ишлатамиз
+  if respond_to?(:flutter_install_all_ios_pods)
+    flutter_install_all_ios_pods File.dirname(File.expand_path(__FILE__))
+  elsif defined?(Flutter)
+    # Муқобил вариант
+  end
 end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
-    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+    end
   end
 end

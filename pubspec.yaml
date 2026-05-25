@@ -1,0 +1,34 @@
+name: flutter_application_1
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  change_app_package_name: ^1.5.0
+  firebase_auth: ^6.5.1
+  firebase_core: ^4.9.0
+  flutter:
+    sdk: flutter
+  flutter_dotenv: ^6.0.1
+  flutter_launcher_icons: ^0.14.4
+  webview_flutter: ^4.13.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  # Расмлар жойлашган папкани иловага танитиш:
+  assets:
+    - assets/
+    - .env
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png" # 👈 Сизнинг логотипингиз йўли
+  min_sdk_android: 21
+

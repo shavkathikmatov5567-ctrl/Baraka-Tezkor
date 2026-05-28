@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "656396720440",
+    "project_id": "baraka-tezkor",
+    "storage_bucket": "baraka-tezkor.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:656396720440:android:e4b344acfec8736a2289cd",
+        "android_client_info": {
+          "package_name": "com.baraka.tezkor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMKEFK3KeZ1TnvvdYU0e6Wn2S0YZpCVmE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,46 +1,58 @@
-plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
+name: Flutter Android Production Signed Build
 
-}
+on:
+  push:
+    branches:
+      - main # Агар сизда асосий ветка номи 'master' бўлса, бу ерга master деб ёзинг
 
-android {
-    namespace = "com.example.flutter_application_1"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+    steps:
+      # 1. GitHub репозиторийсини серверга юклаш
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
+      # 2. Java (JDK 17) муҳитини созлаш
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-    defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.baraka.tezkor"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-    }
+      # 3. GitHub сервер ичида ҳақиқий Production Keystore калитини хавфсиз яратиш
+      - name: Generate Production Keystore
+        run: |
+          keytool -genkey -v -keystore android/app/baraka-release.jks \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -alias baraka-key \
+            -storepass "${{ secrets.SIGNING_STORE_PASSWORD }}" \
+            -keypass "${{ secrets.SIGNING_KEY_PASSWORD }}" \
+            -dname "CN=BarakaTezkor, OU=Production, O=Baraka, L=Tashkent, S=Tashkent, C=UZ"
 
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
-        }
-    }
-}
+      # 4. Flutter муҳитини ўрнатиш
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
 
-flutter {
-    source = "../.."
-}
+      # 5. Паггинларни ўрнатиш ва кэшни тозалаш
+      - name: Install dependencies
+        run: |
+          flutter pub get
+          flutter clean
+
+      # 6. APK файлни йиғиш ва имзолаш
+      - name: Build Signed APK
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: flutter build apk --release
+
+      # 7. Тайёр бўлган хавфсиз APK-ни юклаб олиш учун GitHub-га чиқариш
+      - name: Upload Signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: baraka-tezkor-signed-apk
+          path: build/app/outputs/flutter-apk/app-release.apk

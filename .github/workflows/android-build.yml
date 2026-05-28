@@ -1,0 +1,58 @@
+name: Flutter Android Production Signed Build
+
+on:
+  push:
+    branches:
+      - main # Агар Гитҳубда асосий веткангиз номи 'master' бўлса, бу ерга master деб ёзинг
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Гитҳубдаги кодларни сервер хотирасига юклаш
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Жава (JDK 17) муҳитини созлаш
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 3. Гитҳуб сервер ичида ҳақиқий Production Keystore калитини хавфсиз яратиш
+      - name: Generate Production Keystore
+        run: |
+          keytool -genkey -v -keystore android/app/baraka-release.jks \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -alias baraka-key \
+            -storepass "${{ secrets.SIGNING_STORE_PASSWORD }}" \
+            -keypass "${{ secrets.SIGNING_KEY_PASSWORD }}" \
+            -dname "CN=BarakaTezkor, OU=Production, O=Baraka, L=Tashkent, S=Tashkent, C=UZ"
+
+      # 4. Флаттер муҳитини ўрнатиш
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 5. Паггинларни юклаш ва кэшни тозалаш
+      - name: Install dependencies
+        run: |
+          flutter pub get
+          flutter clean
+
+      # 6. APK файлни йиғиш ва имзолаш
+      - name: Build Signed APK
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: flutter build apk --release
+
+      # 7. Тайёр бўлган хавфсиз APK-ни юклаб олиш учун Гитҳубга чиқариш
+      - name: Upload Signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: baraka-tezkor-signed-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
